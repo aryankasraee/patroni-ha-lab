@@ -1,0 +1,36 @@
+# Cluster-wide settings. Per-node values (name, addresses, credentials) come
+# from PATRONI_* environment variables set in docker-compose.yml, which Patroni
+# merges over this file.
+restapi:
+  listen: 0.0.0.0:8008
+
+bootstrap:
+  dcs:
+    ttl: 15
+    loop_wait: 5
+    retry_timeout: 5
+    maximum_lag_on_failover: 1048576
+    # Synchronous replication: a commit acknowledged to the client is already on
+    # a replica, so a failover cannot lose it. The drill verifies this.
+    synchronous_mode: true
+    synchronous_node_count: 1
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        wal_level: replica
+        hot_standby: "on"
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_log_hints: "on"
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+  pg_hba:
+    - host replication replicator 0.0.0.0/0 scram-sha-256
+    - host all all 0.0.0.0/0 scram-sha-256
+  post_bootstrap: /post_bootstrap.sh
+
+postgresql:
+  bin_dir: /usr/lib/postgresql/17/bin
+  data_dir: /var/lib/postgresql/data/pgdata

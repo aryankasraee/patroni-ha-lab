@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: shellcheck
+        run: shellcheck scripts/*.sh patroni/*.sh
+      - name: compose file is valid
+        run: docker compose config -q
+
+  lab:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Start the cluster
+        run: make up
+      - name: Failover drill
+        run: make drill
+      - name: Backup and restore drill
+        run: make backup
+      - name: Publish measurements
+        if: always()
+        run: |
+          {
+            echo "### Failover drill"
+            echo '```json'
+            cat results/failover.json 2>/dev/null || echo "no result"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Cluster logs on failure
+        if: failure()
+        run: docker compose logs --tail=80
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
