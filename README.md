@@ -42,17 +42,19 @@ Afterwards `scripts/verify-no-loss.sh` checks that every acknowledged row exists
 on the new primary, and the old primary is started again to prove it rejoins as a
 replica.
 
-Result of a run on Docker Desktop (macOS, a laptop, so treat it as a shape, not a
-benchmark):
+Measured results (same drill, two environments):
 
-| Measurement | Value |
-|---|---|
-| Largest gap between two acknowledged writes | 17,045 ms |
-| Acknowledged writes lost | 0 |
-| Old primary rejoined as replica | yes |
+| Measurement | Laptop (Docker Desktop, macOS) | GitHub Actions runner |
+|---|---|---|
+| Largest gap between two acknowledged writes | 17,045 ms | 17,836 ms |
+| Acknowledged writes lost | 0 | 0 |
+| Old primary rejoined as replica | yes | yes |
+| Backup restored from a replica, row counts match | 1000 / 1000 | 1000 / 1000 |
 
-CI runs the same drill on every push and publishes its own numbers in the job
-summary, so you can compare.
+Single runs, not a benchmark: they show the shape (a bounded pause, no loss), not a
+precise number.
+
+CI runs the same drill on every push and publishes its numbers in the job summary.
 
 ### Why ~17 seconds
 
