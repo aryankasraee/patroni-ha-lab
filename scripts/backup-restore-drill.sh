@@ -23,7 +23,8 @@ echo "base backup taken from a replica"
 docker volume create patroni-lab-restore >/dev/null
 docker run --rm -v patroni-lab-restore:/restore -v "$PWD/results/basebackup:/src:ro" postgres:17 \
   bash -c 'cp -a /src/. /restore/ && rm -f /restore/standby.signal /restore/recovery.signal && chown -R postgres:postgres /restore && chmod 700 /restore'
-rm -rf results/basebackup
+# Files are owned by the container user on Linux hosts, so clean up from inside.
+docker compose exec -T client rm -rf /results/basebackup
 
 docker rm -f patroni-lab-restore-test >/dev/null 2>&1 || true
 docker run -d --name patroni-lab-restore-test -v patroni-lab-restore:/var/lib/postgresql/data postgres:17 \
