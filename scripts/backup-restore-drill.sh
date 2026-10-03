@@ -7,7 +7,7 @@ source scripts/lib.sh
 
 PRIMARY="postgresql://app:lab-app@haproxy:5000/lab"
 REPLICA_HOST=haproxy
-wait_healthy
+wait_healthy 180
 
 docker compose exec -T client psql "$PRIMARY" -qc \
   "CREATE TABLE IF NOT EXISTS backup_probe (n int PRIMARY KEY); INSERT INTO backup_probe SELECT g FROM generate_series(1,1000) g ON CONFLICT DO NOTHING;"

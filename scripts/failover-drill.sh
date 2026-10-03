@@ -13,7 +13,7 @@ source scripts/lib.sh
 PGURL="postgresql://app:lab-app@haproxy:5000/lab"
 mkdir -p results
 
-wait_healthy
+wait_healthy 180
 old=$(leader)
 echo "leader before: $old"
 
